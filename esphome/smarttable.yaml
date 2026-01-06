@@ -1,0 +1,177 @@
+esphome:
+  name: $name
+  project:
+    name: autonomous.smarttable
+    version: dev
+
+substitutions:
+  name: smart-table
+  friendly_name: SmartTable
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+captive_portal:
+
+# =============================
+# LOGGING
+# =============================
+logger:
+
+# =============================
+# NETWORK
+# =============================
+wifi:
+  ssid: "WIFI"
+  password: "Password"
+
+# =============================
+# HOME ASSISTANT API
+# =============================
+api:
+  encryption:
+    key: somekey
+
+ota:
+  platform: esphome
+
+# =============================
+# WEB SERVER (ESP WEBPAGE)
+# =============================
+web_server:
+  port: 80
+  version: 3
+  auth:
+    username: admin
+    password: admin
+
+# =============================
+# EXTERNAL COMPONENT
+# =============================
+external_components:
+  - source:
+      type: local
+      path: components
+
+# =============================
+# UART CONFIG (MATCHES begin())
+# =============================
+uart:
+  - id: desk_uart
+    rx_pin: GPIO16
+    tx_pin: GPIO17
+    baud_rate: 9600
+
+  - id: controller_uart
+    rx_pin: GPIO12
+    tx_pin: GPIO13
+    baud_rate: 9600
+
+# =============================
+# SMART TABLE COMPONENT
+# =============================
+smart_table:
+  desk_uart: desk_uart
+  controller_uart: controller_uart
+  height_sensor: smart_table_height
+
+# =============================
+# HEIGHT SENSOR
+# =============================
+sensor:
+  - platform: template
+    id: smart_table_height
+    name: "Smart Table Height"
+    unit_of_measurement: "in"
+    accuracy_decimals: 1
+    # Expose to Home Assistant
+    icon: "mdi:arrow-up-down"
+    internal: false
+
+binary_sensor:
+  - platform: status
+    name: "${friendly_name} Status"
+    entity_category: diagnostic
+
+number:
+  - platform: template
+    id: desk_target_height
+    name: "Desk Target Height"
+    unit_of_measurement: "in"
+    icon: mdi:arrow-up-down
+    min_value: 29.5
+    max_value: 48.4
+    step: 1
+    mode: slider
+    optimistic: true
+    set_action:
+      - lambda: smart_table::go_to_height(x);
+
+text_sensor:
+  - platform: version
+    hide_timestamp: true
+    name: "${friendly_name} ESPHome Version"
+    entity_category: diagnostic
+  - platform: wifi_info
+    ip_address:
+      name: "${friendly_name} IP Address"
+      icon: mdi:wifi
+      entity_category: diagnostic
+    ssid:
+      name: "${friendly_name} Connected SSID"
+      icon: mdi:wifi-strength-2
+      entity_category: diagnostic
+  - platform: uptime
+    name: "${friendly_name} Uptime"
+
+# =============================
+# BUTTON CONTROLS (Expose to Home Assistant)
+# =============================
+button:
+  - platform: template
+    id: desk_up
+    name: "Desk Up"
+    on_press:
+      - lambda: smart_table::go_up(3);
+      # - lambda: smart_table::press_button(0x02, 3000);
+
+  - platform: template
+    id: desk_down
+    name: "Desk Down"
+    on_press:
+      - lambda: smart_table::go_down(3);
+
+  - platform: template
+    id: preset_1
+    name: "Preset 1"
+    on_press:
+      - lambda: smart_table::press_button(0x04, 20);
+
+  - platform: template
+    id: preset_2
+    name: "Preset 2"
+    on_press:
+      - lambda: smart_table::press_button(0x08, 20);
+
+  - platform: template
+    id: preset_3
+    name: "Preset 3"
+    on_press:
+      - lambda: smart_table::press_button(0x10, 20);
+
+  - platform: template
+    id: preset_4
+    name: "Preset 4"
+    on_press:
+      - lambda: smart_table::press_button(0x20, 20);
+
+  - platform: template
+    id: memory
+    name: "Memory"
+    on_press:
+      - lambda: smart_table::press_button(0x40, 20);
+  - platform: restart
+    name: "${friendly_name} Restart"
+    entity_category: config

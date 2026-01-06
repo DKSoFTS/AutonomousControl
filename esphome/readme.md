@@ -11,3 +11,6 @@ Here is the Pin configuration.
     rx_pin: GPIO12
     tx_pin: GPIO13
     baud_rate: 9600
+
+
+  ![Screenshot ESPHOME](screenshot.png)
